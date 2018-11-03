@@ -4,51 +4,20 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Stack;
 
-import mm.calculator.exceptions.IllegalEvaluatorStateException;
 import mm.calculator.exceptions.IllegalNameException;
+import mm.calculator.exceptions.InvalidEvaluatorStateException;
 import mm.calculator.exceptions.InvalidExpressionException;
+import mm.calculator.exceptions.InvalidOperatorException;
+import mm.calculator.utils.OperatorUtils;
+import mm.calculator.utils.ParserUtils;
 
 public class BasicCalculator {
 
-	// TODO: PATTERN compile......
-
-	static final String REGEX_ALL_TOKENS = "(?=[\\,\\s+()])|(?<=[\\,\\s+()])";
-	static final String REGEX_NUMERIC = "[+-]?\\d*\\.?\\d+";
-	static final String REGEX_VARIABLE = "[a-z]";
-	static final String REGEX_WHITESPACE = "\\s+";
-	static final String REGEX_COMMA = "\\,";
-	static final String REGEX_LEFT_BRACKET = "\\(";
-	static final String REGEX_RIGHT_BRACKET = "\\)";
-
-	public static void main(String[] args) throws Exception {
-		BasicCalculator calc = new BasicCalculator();
-
-//		System.out.println(calc.evaluate("add(1,2)")); // 3
-//		System.out.println(calc.evaluate("sub(1,2)")); // -1
-//		System.out.println(calc.evaluate("mult(1,2)")); // 2
-//		System.out.println(calc.evaluate("div(1,2)")); // 0.5
-//
-//		System.out.println(calc.evaluate("add(1,mult(2,3))")); // 7
-//		System.out.println(calc.evaluate("sub(1,add(1,2))")); // -2
-//		System.out.println(calc.evaluate("mult(1,div(1,2))")); // 0.5
-//		System.out.println(calc.evaluate("div(1,mult(2,1))")); // 0.5
-//
-//		System.out.println(calc.evaluate("add(add(2,3),mult(2,3))")); // 11
-//		System.out.println(calc.evaluate("sub(mult(1,2),add(1,2))")); // -1
-//		System.out.println(calc.evaluate("mult(add(2,2),div(9,3))")); // 12
-//		System.out.println(calc.evaluate("div(div(1,2),mult(2,1))")); // 0.25
-//
-//		System.out.println(calc.evaluate("let(a,5,add(a,a))")); // 10
-//		System.out.println(calc.evaluate("let(a,5,let(b,mult(a,10),add(b,a)))")); // 55
-		System.out.println(calc.evaluate("let(a, let(b, 10, add(b, b)), let(b, 20,	 add(a, b)))")); // 40
-//
-//		System.out.println(calc.evaluate("let(a,5,add(1,a))")); // 6
-//		System.out.println(calc.evaluate("let(a,5,let(b,mult(a,10),let(c,add(a,b),add(c,a))))")); // 60
+	public BasicCalculator() {
 	}
 
-	
-	public double evaluate(String expression)
-			throws IllegalNameException, IllegalEvaluatorStateException, InvalidExpressionException {
+	public double evaluate(String expression) throws InvalidEvaluatorStateException, InvalidOperatorException,
+			IllegalNameException, InvalidExpressionException {
 		Stack<String> values = new Stack<String>();
 		Stack<String> operators = new Stack<String>();
 		Stack<String> variablesToBeDiscarded = new Stack<String>();
@@ -64,13 +33,16 @@ public class BasicCalculator {
 				continue;
 			} else if (isRightBracket(token)) {
 				if (operators.empty()) {
-					throw new IllegalEvaluatorStateException("Operators stack shouldn't have been empty");
+					throw new InvalidEvaluatorStateException("Operators stack shouldn't have been empty");
 				}
-				
 				String op = operators.pop();
+				
 				if (isLetOperator(op)) {
-					String var = variablesToBeDiscarded.pop(); // TODO: exception handling
-					variables.remove(var); // TODO: exception handling
+					if (variablesToBeDiscarded.empty() || variables.isEmpty()) {
+						throw new InvalidEvaluatorStateException("Variables stack or map shouldn't have been empty");
+					}
+					String var = variablesToBeDiscarded.pop();
+					variables.remove(var);
 				} else if (isBinaryOperator(op)) {
 					String result = evaluateBinaryOp(op, values.pop(), values.pop(), variables);
 					values.push(result);
@@ -85,98 +57,83 @@ public class BasicCalculator {
 					variables.put(key, val);
 					variablesToBeDiscarded.push(key);
 				}
+				
 				operators.push(token);
 			} else if (isComma(token)) {
 				continue;
 			} else if (isWhitespace(token)) {
 				continue;
 			} else {
-				System.out.println("Unknown token:" + token);
 				throw new IllegalNameException("Invalid token:" + token);
 			}
 		}
 
-		if(!variables.isEmpty() || !variablesToBeDiscarded.empty()) {
-			throw new InvalidExpressionException("Please check the expression as some closing brackets might be missing");
+		if (!variables.isEmpty() || !variablesToBeDiscarded.empty()) {
+			throw new InvalidExpressionException(
+					"Please check the expression as some closing brackets might be missing");
 		}
 
 		return Double.valueOf(values.pop());
 	}
 
-	String[] getTokens(String expression) {
-		return expression.split(REGEX_ALL_TOKENS);
+	boolean isOperator(String token) throws InvalidOperatorException {
+		return OperatorUtils.isOperator(token);
 	}
 
-	boolean isOperator(String token) {
-		if ("LET".equalsIgnoreCase(token) || "ADD".equalsIgnoreCase(token) || "SUB".equalsIgnoreCase(token)
-				|| "MULT".equalsIgnoreCase(token) || "DIV".equalsIgnoreCase(token)) {
-			return true;
+	boolean isBinaryOperator(String token) throws InvalidOperatorException {
+		return OperatorUtils.isBinaryOperator(token);
+	}
+
+	boolean isLetOperator(String token) throws InvalidOperatorException {
+		return OperatorUtils.isLetOperator(token);
+	}
+
+	Double evaluateBinaryOp(String op, Double val2, Double val1)
+			throws InvalidOperatorException, InvalidExpressionException {
+		return OperatorUtils.evaluateBinaryOp(op, val2, val1);
+	}
+
+	String evaluateBinaryOp(String op, String var1, String var2, Map<String, String> vars)
+			throws InvalidEvaluatorStateException {
+		Double ret = 0.0;
+		try {
+			String val1 = isVariable(var1) ? vars.get(var1) : var1;
+			String val2 = isVariable(var2) ? vars.get(var2) : var2;
+			Double num1 = Double.valueOf(val1);
+			Double num2 = Double.valueOf(val2);
+			ret = evaluateBinaryOp(op, num1, num2);
+		} catch (Exception e) {
+			throw new InvalidEvaluatorStateException("Issues evaluating expression:" + var1 + op + var2, e);
 		}
-		return false;
-	}
-
-	boolean isBinaryOperator(String token) {
-		if ("ADD".equalsIgnoreCase(token) || "SUB".equalsIgnoreCase(token) || "MULT".equalsIgnoreCase(token)
-				|| "DIV".equalsIgnoreCase(token)) {
-			return true;
-		}
-		return false;
-	}
-
-	boolean isLetOperator(String token) {
-		if ("LET".equalsIgnoreCase(token)) {
-			return true;
-		}
-		return false;
-	}
-
-	Double evaluateBinaryOp(String op, Double val2, Double val1) {
-		String upperCaseOp = op.toUpperCase();
-		switch (upperCaseOp) {
-		case "ADD":
-			return val1 + val2;
-		case "SUB":
-			return val1 - val2;
-		case "MULT":
-			return val1 * val2;
-		case "DIV":
-			return val1 / val2; // TODO: val2==0 throw ex
-		default:
-			System.out.println("Unknown binary op:" + op);
-			return 0.0; // TODO: throw ex
-		}
-	}
-
-	String evaluateBinaryOp(String op, String var1, String var2, Map<String, String> vars) {
-		String val1 = isVariable(var1) ? vars.get(var1) : var1; // TODO: Double.valueOf ex.
-		String val2 = isVariable(var2) ? vars.get(var2) : var2;
-		Double num1 = Double.valueOf(val1);
-		Double num2 = Double.valueOf(val2);
-		Double ret = evaluateBinaryOp(op, num1, num2);
 		return ret.toString();
 	}
 
-	boolean isNumeric(String token) {
-		return token.matches(REGEX_NUMERIC);
+	public String[] getTokens(String expression) {
+		return ParserUtils.getTokens(expression);
 	}
 
-	boolean isVariable(String token) {
-		return token.matches(REGEX_VARIABLE);
+	public boolean isNumeric(String token) {
+		return ParserUtils.isNumeric(token);
 	}
 
-	boolean isWhitespace(String token) {
-		return token.matches(REGEX_WHITESPACE);
+	public boolean isVariable(String token) {
+		return ParserUtils.isVariable(token);
 	}
 
-	boolean isComma(String token) {
-		return token.matches(REGEX_COMMA);
+	public boolean isWhitespace(String token) {
+		return ParserUtils.isWhitespace(token);
 	}
 
-	boolean isRightBracket(String token) {
-		return token.matches(REGEX_RIGHT_BRACKET);
+	public boolean isComma(String token) {
+		return ParserUtils.isComma(token);
 	}
 
-	boolean isLeftBracket(String token) {
-		return token.matches(REGEX_LEFT_BRACKET);
+	public boolean isRightBracket(String token) {
+		return ParserUtils.isRightBracket(token);
 	}
+
+	public boolean isLeftBracket(String token) {
+		return ParserUtils.isLeftBracket(token);
+	}
+
 }

@@ -1,33 +1,29 @@
 package mm.calculator;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import mm.calculator.evaluators.BasicCalculator;
-import mm.calculator.exceptions.IllegalEvaluatorStateException;
-import mm.calculator.exceptions.IllegalNameException;
-import mm.calculator.exceptions.InvalidExpressionException;
 
 public class CalculatorMain {
 
+	static final Logger LOGGER = LoggerFactory.getLogger(CalculatorMain.class);
+
 	public static void main(String[] args) {
 		try {
-			BasicCalculator calc = new BasicCalculator();
-
 			if (args.length == 0) {
-				System.err.println("Please provide an expression for evaluation.");
+				LOGGER.error("Please provide an expression for evaluation.");
 				System.exit(-1);
 			}
-			Double result = calc.evaluate(args[0]);
 			
-			System.out.println("INPUT>> " + args[0]);
-			System.out.println("OUTPUT>> " + result);
-		} catch (IllegalNameException e) {
-			System.err.println(e.getMessage());
-			// TODO: log err
-		} catch (IllegalEvaluatorStateException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (InvalidExpressionException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			BasicCalculator calc = new BasicCalculator();
+			Double result = calc.evaluate(args[0]);
+
+			LOGGER.info("INPUT>> " + args[0]);
+			LOGGER.info("OUTPUT>> " + result);
+		} catch (Exception e) {
+			LOGGER.error(e.getMessage(), e);
+			System.exit(1);
 		}
 	}
 

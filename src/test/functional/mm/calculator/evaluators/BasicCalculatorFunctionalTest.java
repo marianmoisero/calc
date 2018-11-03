@@ -10,7 +10,7 @@ import org.junit.Test;
 import mm.calculator.exceptions.IllegalNameException;
 import mm.calculator.exceptions.InvalidExpressionException;
 
-public class BasicCalculatorTest {
+public class BasicCalculatorFunctionalTest {
 
 	BasicCalculator calc;
 
