@@ -34,7 +34,7 @@ public class OperatorUtilsTest {
 		Double val1 = 0.0;
 		Double val2 = 2.0;
 		Double result = 2.0;
-		assertTrue(result.equals(OperatorUtils.evaluateBinaryOp("add", val2, val1)));
+		assertTrue(result.equals(OperatorUtils.evaluateBinaryOp("add", val1, val2)));
 	}
 
 	@Test
@@ -42,7 +42,7 @@ public class OperatorUtilsTest {
 		Double val1 = 4.0;
 		Double val2 = 2.0;
 		Double result = 2.0;
-		assertTrue(result.equals(OperatorUtils.evaluateBinaryOp("sub", val2, val1)));
+		assertTrue(result.equals(OperatorUtils.evaluateBinaryOp("sub", val1, val2)));
 	}
 
 	@Test
@@ -50,7 +50,7 @@ public class OperatorUtilsTest {
 		Double val1 = 0.0;
 		Double val2 = 2.0;
 		Double result = 0.0;
-		assertTrue(result.equals(OperatorUtils.evaluateBinaryOp("mult", val2, val1)));
+		assertTrue(result.equals(OperatorUtils.evaluateBinaryOp("mult", val1, val2)));
 	}
 
 	@Test
@@ -58,7 +58,7 @@ public class OperatorUtilsTest {
 		Double val1 = 0.0;
 		Double val2 = 2.0;
 		Double result = 0.0;
-		assertTrue(result.equals(OperatorUtils.evaluateBinaryOp("div", val2, val1)));
+		assertTrue(result.equals(OperatorUtils.evaluateBinaryOp("div", val1, val2)));
 	}
 
 	@Test(expected = InvalidOperatorException.class)
@@ -86,7 +86,7 @@ public class OperatorUtilsTest {
 			throws InvalidOperatorException, InvalidExpressionException {
 		Double val1 = 2.0;
 		Double val2 = 0.0;
-		OperatorUtils.evaluateBinaryOp("div", val2, val1);
+		OperatorUtils.evaluateBinaryOp("div", val1, val2);
 	}
 
 }

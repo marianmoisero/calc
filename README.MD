@@ -14,3 +14,8 @@ If file logging is enabled in logback.xml, please double check that the specifie
 touch /var/log/calculator.log
 sudo chmod a+rwx /var/log/calculator.log
 ```
+
+How to run the functional tests
+```
+mvn test -P functional
+```

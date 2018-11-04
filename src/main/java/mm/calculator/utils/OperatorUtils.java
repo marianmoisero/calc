@@ -37,7 +37,7 @@ public final class OperatorUtils {
 		}
 	}
 
-	public static Double evaluateBinaryOp(String op, Double val2, Double val1)
+	public static Double evaluateBinaryOp(String op, Double val1, Double val2)
 			throws InvalidOperatorException, InvalidExpressionException {
 		Operator operator = getOp(op);
 
@@ -50,7 +50,7 @@ public final class OperatorUtils {
 			return val1 * val2;
 		case DIV:
 			if (0.0 == val2) {
-				throw new InvalidExpressionException("Can't divide with 0:" + val1 + op + val2);
+				throw new InvalidExpressionException("Can't divide with 0:" + val2 + op + val1);
 			}
 			return val1 / val2;
 		default:
