@@ -172,6 +172,18 @@ public class BasicCalculatorFunctionalTest {
 		calc.evaluate("let(a,10,b)");
 		fail("Should have failed for invalid expression");
 	}
+	
+	@Test(expected = InvalidExpressionException.class)
+	public void testInvalidLetArgsNo() throws Exception {
+		calc.evaluate("let(a,10)");
+		fail("Should have failed for invalid expression");
+	}
+	
+	@Test(expected = InvalidExpressionException.class)
+	public void testInvalidBinaryOpArgsNo() throws Exception {
+		calc.evaluate("add(1,2,3)");
+		fail("Should have failed for invalid expression");
+	}
 
 	////////////////// CODE REVIEW #1////////////////////////////
 
